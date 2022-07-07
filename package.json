@@ -1,7 +1,9 @@
 {
   "name": "gas-bench",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "bench": "hardhat run bench.js"
+  },
   "author": "Francisco Giordano <fg@frang.io>",
   "license": "MIT",
   "dependencies": {
