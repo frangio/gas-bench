@@ -60,6 +60,20 @@ abstract contract Setup {
     }
 }
 
+function _arrayLoad(uint256[] memory array, uint256 idx) pure returns (uint256 val) {
+    /// @solidity memory-safe-assembly
+    assembly {
+        val := mload(add(32, add(array, shl(5, idx))))
+    }
+}
+
+function _arrayStore(uint256[] memory array, uint256 idx, uint256 val) pure {
+    /// @solidity memory-safe-assembly
+    assembly {
+        mstore(add(32, add(array, shl(5, idx))), val)
+    }
+}
+
 contract HeapSort is Setup {
     function bench() external {
         sort(_getTestArray());
@@ -114,50 +128,37 @@ contract HeapSort is Setup {
         }
     }
 
-    function _arrayLoad(uint256[] memory array, uint256 idx) private pure returns (uint256 val) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            val := mload(add(32, add(array, shl(5, idx))))
-        }
-    }
-
-    function _arrayStore(
-        uint256[] memory array,
-        uint256 idx,
-        uint256 val
-    ) private pure {
-        /// @solidity memory-safe-assembly
-        assembly {
-            mstore(add(32, add(array, shl(5, idx))), val)
-        }
-    }
 }
 
 contract QuickSort is Setup {
     function bench() external {
         _quickSort(_getTestArray());
     }
-
     
     function _quickSort(uint256[] memory array) private pure {
         _quickSort(array, 0, array.length);
     }
 
     function _quickSort(uint256[] memory array, uint256 i, uint256 j) private pure {
-        if (j - i < 2) return;
+        unchecked {
+            if (j - i < 2) return;
 
-        uint256 p = i;
-        for (uint256 k = i + 1; k < j; ++k) {
-            if (array[i] > array[k]) {
-                _swap(array, ++p, k);
+            uint256 p = i;
+            for (uint256 k = i + 1; k < j; ++k) {
+                if (_arrayLoad(array, i) > _arrayLoad(array, k)) {
+                    _swap(array, ++p, k);
+                }
             }
+            _swap(array, i, p);
+            _quickSort(array, i, p);
+            _quickSort(array, p + 1, j);
         }
-        _swap(array, i, p);
-        _quickSort(array, i, p);
-        _quickSort(array, p + 1, j);
     }
 
-    function _swap(uint256[] memory array, uint256 i, uint256 j) private pure {
-        (array[i], array[j]) = (array[j], array[i]);
+    function _swap(uint256[] memory a, uint256 i, uint256 j) private pure {
+        uint a_i = _arrayLoad(a, i);
+        uint a_j = _arrayLoad(a, j);
+        _arrayStore(a, i, a_j);
+        _arrayStore(a, j, a_i);
     }
 }
