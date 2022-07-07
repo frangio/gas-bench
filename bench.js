@@ -70,10 +70,12 @@ const printTable = data => {
 
   const tableData = [[''].concat(data.map(d => d.name))];
   for (const row of rows) {
-    const min = data.map(d => d[row]).reduce((a, b) => a < b ? a : b);
+    const min = data.map(d => d[row]).filter(r => r !== undefined).reduce((a, b) => a < b ? a : b);
     tableData.push([row].concat(data.map(d => {
       const val = d[row];
-      if (val === min) {
+      if (val === undefined) {
+        return '';
+      } else if (val === min) {
         return chalk.green(val);
       } else {
         const dif = val - min;
